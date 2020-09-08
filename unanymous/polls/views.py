@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404, render
 from django.template import loader
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.urls import reverse
 
 from .models import Question, Choice
@@ -38,7 +38,7 @@ def vote(request, question_id):
     question = get_object_or_404(Question, pk=question_id)
     try:
         selected_choice = question.choice_set.get(pk=request.POST['choice'])
-    except (KeyError, Chhoice.DoesNotExist):
+    except (KeyError, Choice.DoesNotExist):
         # Display the voting form again
         return render(request, 'polls/detail.html', {
             'question': question,
@@ -50,3 +50,14 @@ def vote(request, question_id):
         # Always return a HttpResponseRedirect after dealing with POST requests
         # to prevent data from being posted twice in the case of 'Back' pressed
         return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
+
+# Data of a single question - API endpoint for graphing
+
+
+def resultsData(request, obj):
+    voteData = []
+    question = Question.objects.get(id=obj)
+    votes = question.choice_set.all()
+    for i in votes:
+        voteData.append({i.choice_text: i.votes})
+    return JsonResponse(voteData, safe=False)
